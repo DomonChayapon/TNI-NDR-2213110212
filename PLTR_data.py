@@ -80,24 +80,46 @@ st.title("📈 วิเคราะห์ราคาหุ้น PLTR")
 # ส่วนที่ 1: กราฟแนวโน้มราคาหุ้น
 st.subheader("📉 แนวโน้มราคาหุ้น PLTR")
 
+# Dropdown สำหรับเลือกจำนวนวัน
+days_option = st.selectbox("เลือกช่วงเวลา (วัน)", ["all วัน", 15, 30, 60, 90])
+
+# กรองข้อมูลตามจำนวนวัน
+if days_option == "all วัน":
+    df_filtered = df_sorted
+else:
+    df_filtered = df_sorted[df_sorted["Date"] >= (current_date - pd.Timedelta(days=days_option))]
+
+# คำนวณ MACD, RSI, และ Bollinger Bands สำหรับข้อมูลที่กรองแล้ว
+macd_filtered, signal_line_filtered, histogram_filtered = calculate_macd(df_filtered["Price"])
+rsi_filtered = calculate_rsi(df_filtered["Price"])
+sma_filtered, upper_band_filtered, lower_band_filtered = calculate_bollinger_bands(df_filtered["Price"])
+
+# เพิ่มผลลัพธ์ลงใน DataFrame ที่กรองแล้ว
+df_filtered = df_filtered.copy()
+df_filtered["MACD"] = macd_filtered
+df_filtered["Signal"] = signal_line_filtered
+df_filtered["Histogram"] = histogram_filtered
+df_filtered["RSI"] = rsi_filtered
+df_filtered["SMA"] = sma_filtered
+df_filtered["Upper Band"] = upper_band_filtered
+df_filtered["Lower Band"] = lower_band_filtered
+
 # Dropdown สำหรับเลือกประเภทกราฟ
 chart_option = st.selectbox("เลือกประเภทกราฟ", ["Trend", "Indicator"])
 
 # ตัวแปรสำหรับควบคุมการแสดงกราฟ
-show_candlestick = False
 show_macd = False
 show_rsi = False
 show_bollinger = False
 
 # ถ้าเลือก Indicator ให้แสดง Checkbox
 if chart_option == "Indicator":
-    show_candlestick = True  # แสดง Candlestick Chart โดยอัตโนมัติเมื่อเลือก Indicator
     show_macd = st.checkbox("แสดง MACD", value=False)
     show_rsi = st.checkbox("แสดง RSI", value=False)
     show_bollinger = st.checkbox("แสดง Bollinger Bands", value=False)
 
 # เตรียมข้อมูลสำหรับกราฟ
-if chart_option == "Indicator" and show_candlestick:
+if chart_option == "Indicator":
     # จำนวนแถวของ subplot (เริ่มต้นที่ 1 สำหรับ Candlestick)
     rows = 1
     if show_macd:
@@ -113,11 +135,11 @@ if chart_option == "Indicator" and show_candlestick:
     # เพิ่มกราฟแท่งเทียนในแถวแรก
     fig.add_trace(
         go.Candlestick(
-            x=df_sorted["Date"],
-            open=df_sorted["Open"],
-            high=df_sorted["High"],
-            low=df_sorted["Low"],
-            close=df_sorted["Price"],
+            x=df_filtered["Date"],
+            open=df_filtered["Open"],
+            high=df_filtered["High"],
+            low=df_filtered["Low"],
+            close=df_filtered["Price"],
             name="PLTR"
         ),
         row=1, col=1
@@ -127,15 +149,15 @@ if chart_option == "Indicator" and show_candlestick:
     current_row = 2
     if show_macd:
         fig.add_trace(
-            go.Scatter(x=df_sorted["Date"], y=df_sorted["MACD"], mode="lines", name="MACD", line=dict(color="blue")),
+            go.Scatter(x=df_filtered["Date"], y=df_filtered["MACD"], mode="lines", name="MACD", line=dict(color="blue")),
             row=current_row, col=1
         )
         fig.add_trace(
-            go.Scatter(x=df_sorted["Date"], y=df_sorted["Signal"], mode="lines", name="Signal", line=dict(color="orange")),
+            go.Scatter(x=df_filtered["Date"], y=df_filtered["Signal"], mode="lines", name="Signal", line=dict(color="orange")),
             row=current_row, col=1
         )
         fig.add_trace(
-            go.Bar(x=df_sorted["Date"], y=df_sorted["Histogram"], name="Histogram", marker_color="grey"),
+            go.Bar(x=df_filtered["Date"], y=df_filtered["Histogram"], name="Histogram", marker_color="grey"),
             row=current_row, col=1
         )
         current_row += 1
@@ -143,7 +165,7 @@ if chart_option == "Indicator" and show_candlestick:
     # เพิ่มกราฟ RSI ถ้าติ๊ก
     if show_rsi:
         fig.add_trace(
-            go.Scatter(x=df_sorted["Date"], y=df_sorted["RSI"], mode="lines", name="RSI", line=dict(color="purple")),
+            go.Scatter(x=df_filtered["Date"], y=df_filtered["RSI"], mode="lines", name="RSI", line=dict(color="purple")),
             row=current_row, col=1
         )
         # เพิ่มเส้น 70 และ 30 (ระดับ Overbought/Oversold)
@@ -154,15 +176,15 @@ if chart_option == "Indicator" and show_candlestick:
     # เพิ่มกราฟ Bollinger Bands ถ้าติ๊ก
     if show_bollinger:
         fig.add_trace(
-            go.Scatter(x=df_sorted["Date"], y=df_sorted["Upper Band"], mode="lines", name="Upper Band", line=dict(color="red", dash="dash")),
+            go.Scatter(x=df_filtered["Date"], y=df_filtered["Upper Band"], mode="lines", name="Upper Band", line=dict(color="red", dash="dash")),
             row=current_row, col=1
         )
         fig.add_trace(
-            go.Scatter(x=df_sorted["Date"], y=df_sorted["SMA"], mode="lines", name="SMA", line=dict(color="black")),
+            go.Scatter(x=df_filtered["Date"], y=df_filtered["SMA"], mode="lines", name="SMA", line=dict(color="black")),
             row=current_row, col=1
         )
         fig.add_trace(
-            go.Scatter(x=df_sorted["Date"], y=df_sorted["Lower Band"], mode="lines", name="Lower Band", line=dict(color="green", dash="dash")),
+            go.Scatter(x=df_filtered["Date"], y=df_filtered["Lower Band"], mode="lines", name="Lower Band", line=dict(color="green", dash="dash")),
             row=current_row, col=1
         )
 
@@ -193,15 +215,15 @@ if chart_option == "Indicator" and show_candlestick:
 
 elif chart_option == "Trend":
     # กราฟเส้นตามเดิม
-    X = df_sorted["Date"].map(pd.Timestamp.toordinal).values.reshape(-1, 1)
-    y = df_sorted["Price"].values
+    X = df_filtered["Date"].map(pd.Timestamp.toordinal).values.reshape(-1, 1)
+    y = df_filtered["Price"].values
     model = LinearRegression()
     model.fit(X, y)
     trend = model.predict(X)
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(df_sorted["Date"], y, label="Actual Closing Price")
-    ax.plot(df_sorted["Date"], trend, label="Trend (Linear Regression)", linestyle="--", color="red")
+    ax.plot(df_filtered["Date"], y, label="Actual Closing Price")
+    ax.plot(df_filtered["Date"], trend, label="Trend (Linear Regression)", linestyle="--", color="red")
     ax.set_title("PLTR Closing Price Trend")
     ax.set_xlabel("Date")
     ax.set_ylabel("Closing Price (Baht)")
@@ -212,7 +234,7 @@ elif chart_option == "Trend":
 # ส่วนที่ 2: ข้อมูลเบื้องต้น (แสดง 10 แถวล่าสุด)
 st.subheader("🧾 ข้อมูลเบื้องต้น")
 st.dataframe(
-    df_sorted_display[["Date", "Price", "Open", "High", "Low", "Set index"]].tail(10).reset_index(drop=True),
+    df_filtered[["Date", "Price", "Open", "High", "Low", "Set index"]].tail(10).reset_index(drop=True),
     use_container_width=True,
     hide_index=True
 )
