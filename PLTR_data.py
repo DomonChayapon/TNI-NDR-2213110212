@@ -70,14 +70,26 @@ df_sorted["SMA"] = sma
 df_sorted["Upper Band"] = upper_band
 df_sorted["Lower Band"] = lower_band
 
-# ตั้งชื่อหน้า
-st.title("📈 วิเคราะห์ราคาหุ้น PLTR")
+# ตั้งชื่อหน้าและเพิ่มไอคอน
+col1, col2 = st.columns([1, 7])
+with col1:
+    st.image("pltr_icon.png", width=80)  # ใช้ขนาดแนะนำ width=80
+with col2:
+    st.title("Palantir Technologies Inc")
+st.markdown("<small>NASDAQ: PLTR</small>", unsafe_allow_html=True)
 
-# ส่วนที่ 1: กราฟแนวโน้มราคาหุ้น
-st.subheader("📉 แนวโน้มราคาหุ้น PLTR")
+# ข้อมูลบริษัทใน 3 บรรทัด ขนาดตัวอักษรเล็กลง
+st.markdown(
+    "<small>Palantir Technologies Inc. is a U.S.-based software company founded in 2003, specializing in big data analytics.<br>"
+    "Headquartered in Denver, Colorado, it offers platforms: Gotham (defense), Foundry (enterprise), Apollo (CI/CD), and AIP.<br>"
+    "Used by government agencies and companies like Morgan Stanley, Airbus, and Fiat Chrysler.</small>"
+    , unsafe_allow_html=True
+)
 
-# Dropdown สำหรับเลือกจำนวนวัน
-days_option = st.selectbox("เลือกช่วงเวลา (วัน)", ["All", 15, 30, 60, 90])
+# ส่วนที่ 2: กราฟแนวโน้มราคาหุ้น
+days_option = st.selectbox("Select time period (day)", ["All", 15, 30, 60, 90])
+time_period = "All" if days_option == "All" else f"{days_option} days"
+st.subheader(f"Price chart: {time_period}")
 
 # กรองข้อมูลตามจำนวนวัน
 if days_option == "All":
@@ -101,7 +113,7 @@ df_filtered["Upper Band"] = upper_band_filtered
 df_filtered["Lower Band"] = lower_band_filtered
 
 # Dropdown สำหรับเลือกประเภทกราฟ
-chart_option = st.selectbox("เลือกประเภทกราฟ", ["Trend", "Indicator"])
+chart_option = st.selectbox("Select graph type", ["Trend", "Indicator"])
 
 # ตัวแปรสำหรับควบคุมการแสดงกราฟ
 show_macd = False
@@ -110,9 +122,9 @@ show_bollinger = False
 
 # ถ้าเลือก Indicator ให้แสดง Checkbox
 if chart_option == "Indicator":
-    show_macd = st.checkbox("แสดง MACD", value=False)
-    show_rsi = st.checkbox("แสดง RSI", value=False)
-    show_bollinger = st.checkbox("แสดง Bollinger Bands", value=False)
+    show_macd = st.checkbox("Show MACD", value=False)
+    show_rsi = st.checkbox("Show RSI", value=False)
+    show_bollinger = st.checkbox("Show Bollinger Bands", value=False)
 
 # เตรียมข้อมูลสำหรับกราฟ
 if chart_option == "Indicator":
@@ -228,7 +240,7 @@ elif chart_option == "Trend":
     st.pyplot(fig)
 
 # ส่วนที่ 2: ข้อมูลเบื้องต้น (แสดงตามจำนวนวันที่เลือก)
-st.subheader("🧾 ข้อมูลเบื้องต้น")
+st.subheader(f"Historical price: {time_period}")
 # คัดลอก df_filtered เพื่อปรับแต่งการแสดงผล
 df_display = df_filtered.copy()
 # ลบเวลาออก แสดงเฉพาะวันที่
