@@ -37,7 +37,7 @@ def calculate_bollinger_bands(data, window=20, num_std=2):
     return sma, upper_band, lower_band
 
 # โหลดข้อมูล
-df = pd.read_excel("D:/NDR_project/PLTR_dataset.xlsx", sheet_name="PLTR", skiprows=1)
+df = pd.read_excel("PLTR_dataset.xlsx", sheet_name="PLTR", skiprows=1)
 df.columns = ["Date", "Price", "Open", "High", "Low", "Vol", "Change %", "Set index"]
 
 # ทำความสะอาดข้อมูล
