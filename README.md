@@ -18,3 +18,7 @@ This is a Streamlit-based application designed to analyze the stock data of **Pa
 ## STREAMLIT APP LINK
 
 🔗 [Click to Open the App](https://domonchayapon.streamlit.app/)
+
+## Canva Link
+
+🔗 [Open Canva](https://www.canva.com/design/DAGocNLRF7M/bguAdjR25ES_RlJBxaD_-Q/edit?utm_content=DAGocNLRF7M&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
