@@ -53,12 +53,8 @@ df = df.dropna()
 current_date = pd.to_datetime("2025-05-25")
 df = df[df["Date"] <= current_date]
 
-# เรียงข้อมูลตามวันที่
+# เรียงข้อมูลตามวันที่ (สำหรับกราฟ)
 df_sorted = df.sort_values("Date")
-
-# ใช้ df_sorted สำหรับการแสดงผล (แปลงวันที่เป็น string เพื่อแสดงในตาราง)
-df_sorted_display = df_sorted.copy()
-df_sorted_display["Date"] = df_sorted_display["Date"].dt.strftime('%Y-%m-%d')
 
 # คำนวณ MACD, RSI, และ Bollinger Bands
 macd, signal_line, histogram = calculate_macd(df_sorted["Price"])
@@ -81,10 +77,10 @@ st.title("📈 วิเคราะห์ราคาหุ้น PLTR")
 st.subheader("📉 แนวโน้มราคาหุ้น PLTR")
 
 # Dropdown สำหรับเลือกจำนวนวัน
-days_option = st.selectbox("เลือกช่วงเวลา (วัน)", ["all วัน", 15, 30, 60, 90])
+days_option = st.selectbox("เลือกช่วงเวลา (วัน)", ["All", 15, 30, 60, 90])
 
 # กรองข้อมูลตามจำนวนวัน
-if days_option == "all วัน":
+if days_option == "All":
     df_filtered = df_sorted
 else:
     df_filtered = df_sorted[df_sorted["Date"] >= (current_date - pd.Timedelta(days=days_option))]
@@ -231,10 +227,21 @@ elif chart_option == "Trend":
     ax.grid(True)
     st.pyplot(fig)
 
-# ส่วนที่ 2: ข้อมูลเบื้องต้น (แสดง 10 แถวล่าสุด)
+# ส่วนที่ 2: ข้อมูลเบื้องต้น (แสดงตามจำนวนวันที่เลือก)
 st.subheader("🧾 ข้อมูลเบื้องต้น")
+# คัดลอก df_filtered เพื่อปรับแต่งการแสดงผล
+df_display = df_filtered.copy()
+# ลบเวลาออก แสดงเฉพาะวันที่
+df_display["Date"] = df_display["Date"].dt.strftime('%Y-%m-%d')
+# เรียงวันที่จากล่าสุดไปเก่าสุด
+df_display = df_display.sort_values("Date", ascending=False)
+# กำหนดจำนวนแถวตามวันที่เลือก
+if days_option == "All":
+    rows_to_show = len(df_filtered)
+else:
+    rows_to_show = min(days_option, len(df_filtered))
 st.dataframe(
-    df_filtered[["Date", "Price", "Open", "High", "Low", "Set index"]].tail(10).reset_index(drop=True),
+    df_display[["Date", "Price", "Open", "High", "Low", "Set index"]].head(rows_to_show).reset_index(drop=True),
     use_container_width=True,
     hide_index=True
 )
